@@ -13,6 +13,8 @@
     "@google-cloud/profiler": "^2.0.2",
     "@google-cloud/trace-agent": "4.0.1",
     "@grpc/proto-loader": "^0.3.0",
+    "@opencensus/exporter-jaeger": "0.0.20",
+    "@opencensus/nodejs": "0.0.20",
     "async": "^1.5.2",
     "google-protobuf": "^3.0.0",
     "grpc": "^1.22.2",

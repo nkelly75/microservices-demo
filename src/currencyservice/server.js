@@ -34,6 +34,18 @@ if(process.env.DISABLE_TRACING) {
 else {
   console.log("Tracing enabled.")
   require('@google-cloud/trace-agent').start();
+  const tracing = require('@opencensus/nodejs');
+  const { JaegerTraceExporter } = require('@opencensus/exporter-jaeger');
+  var tracer = tracing.start({ samplingRate: 1 }).tracer;
+
+  jaeger_host = process.env.JAEGER_SERVICE_ADDR.split(':')[0];
+  jaeger_port = parseInt(process.env.JAEGER_SERVICE_ADDR.split(':')[1], 10);
+
+  tracer.registerSpanEventListener(new JaegerTraceExporter({
+    host: jaeger_host,
+    port: jaeger_port,
+    serviceName: 'currencyservice'
+  }));
 }
 
 if(process.env.DISABLE_DEBUGGER) {
@@ -120,6 +132,7 @@ function getSupportedCurrencies (call, callback) {
  * Converts between currencies
  */
 function convert (call, callback) {
+  const span = tracer.startChildSpan({ name: 'convert' });
   logger.info('received conversion request');
   try {
     _getCurrencyData((data) => {
@@ -151,6 +164,7 @@ function convert (call, callback) {
     logger.error(`conversion request failed: ${err}`);
     callback(err.message);
   }
+  span.end();
 }
 
 /**
@@ -165,12 +179,15 @@ function check (call, callback) {
  * CurrencyConverter service at the sample server port
  */
 function main () {
-  logger.info(`Starting gRPC server on port ${PORT}...`);
-  const server = new grpc.Server();
-  server.addService(shopProto.CurrencyService.service, {getSupportedCurrencies, convert});
-  server.addService(healthProto.Health.service, {check});
-  server.bind(`0.0.0.0:${PORT}`, grpc.ServerCredentials.createInsecure());
-  server.start();
+  tracer.startRootSpan({ name: 'main' }, rootSpan => {
+    logger.info(`Starting gRPC server on port ${PORT}...`);
+    const server = new grpc.Server();
+    server.addService(shopProto.CurrencyService.service, {getSupportedCurrencies, convert});
+    server.addService(healthProto.Health.service, {check});
+    server.bind(`0.0.0.0:${PORT}`, grpc.ServerCredentials.createInsecure());
+    server.start();
+    rootSpan.end();
+  });
 }
 
 main();

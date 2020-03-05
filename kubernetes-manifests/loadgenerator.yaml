@@ -37,6 +37,8 @@ spec:
           value: "frontend:80"
         - name: USERS
           value: "10"
+        - name: JAEGER_SERVICE_ADDR
+          value: "jaeger-collector:14268"
         resources:
           requests:
             cpu: 300m
