@@ -30,7 +30,7 @@ from grpc_health.v1 import health_pb2_grpc
 
 from opencensus.ext.stackdriver import trace_exporter as stackdriver_exporter
 from opencensus.ext.jaeger.trace_exporter import JaegerExporter
-from opencensus.trace import tracer as tracer_module
+from opencensus.trace.tracer import Tracer
 from opencensus.ext.grpc import server_interceptor
 from opencensus.common.transports.async_ import AsyncTransport
 from opencensus.trace import samplers
@@ -39,8 +39,12 @@ from opencensus.trace import samplers
 # import googleclouddebugger
 import googlecloudprofiler
 
+import logging
 from logger import getJSONLogger
 logger = getJSONLogger('emailservice-server')
+
+ologger = logging.getLogger('opencensus')
+ologger.setLevel(logging.DEBUG)
 
 # try:
 #     googleclouddebugger.enable(
@@ -69,6 +73,7 @@ class EmailService(BaseEmailService):
 
   @staticmethod
   def send_email(client, email_address, content):
+    tracer.start_span(name='send_email')
     response = client.send_message(
       sender = client.sender_path(project_id, region, sender_id),
       envelope_from_authority = '',
@@ -86,8 +91,10 @@ class EmailService(BaseEmailService):
       }
     )
     logger.info("Message sent: {}".format(response.rfc822_message_id))
+    tracer.end_span()
 
   def SendOrderConfirmation(self, request, context):
+    tracer.start_span(name='SendOrderConfirmation')
     email = request.email
     order = request.order
 
@@ -107,6 +114,7 @@ class EmailService(BaseEmailService):
       context.set_code(grpc.StatusCode.INTERNAL)
       return demo_pb2.Empty()
 
+    tracer.end_span()
     return demo_pb2.Empty()
 
 class DummyEmailService(BaseEmailService):
@@ -196,9 +204,11 @@ if __name__ == '__main__':
       exporter = JaegerExporter(
           service_name="emailservice",
           agent_host_name=os.getenv("JAEGER_SERVICE_ADDR").split(':')[0],
-          agent_port=int(os.getenv("JAEGER_SERVICE_ADDR").split(':')[1]),
+          # agent_port=int(os.getenv("JAEGER_SERVICE_ADDR").split(':')[1]),
+          # agent_port=6831,
       )
       tracer_interceptor = server_interceptor.OpenCensusServerInterceptor(sampler, exporter)
+      tracer = Tracer(exporter=exporter, sampler=sampler)
   except KeyError:
       logger.info("Tracing disabled.")
       tracer_interceptor = server_interceptor.OpenCensusServerInterceptor()

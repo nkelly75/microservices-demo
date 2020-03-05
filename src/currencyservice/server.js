@@ -43,7 +43,6 @@ else {
 
   tracer.registerSpanEventListener(new JaegerTraceExporter({
     host: jaeger_host,
-    port: jaeger_port,
     serviceName: 'currencyservice'
   }));
 }

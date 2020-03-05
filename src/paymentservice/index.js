@@ -22,7 +22,25 @@ require('@google-cloud/profiler').start({
     version: '1.0.0'
   }
 });
-require('@google-cloud/trace-agent').start();
+if(process.env.DISABLE_TRACING) {
+  console.log("Tracing disabled.")
+}
+else {
+  console.log("Tracing enabled.")
+  require('@google-cloud/trace-agent').start();
+  const tracing = require('@opencensus/nodejs');
+  const { JaegerTraceExporter } = require('@opencensus/exporter-jaeger');
+  var tracer = tracing.start({ samplingRate: 1 }).tracer;
+
+  const jaeger_host = process.env.JAEGER_SERVICE_ADDR.split(':')[0];
+  const jaeger_port = parseInt(process.env.JAEGER_SERVICE_ADDR.split(':')[1], 10);
+
+  tracer.registerSpanEventListener(new JaegerTraceExporter({
+    host: jaeger_host,
+    serviceName: 'paymentservice'
+  }));
+}
+
 require('@google-cloud/debug-agent').start({
   serviceContext: {
     service: 'paymentservice',
@@ -30,12 +48,15 @@ require('@google-cloud/debug-agent').start({
   }
 });
 
-const path = require('path');
-const HipsterShopServer = require('./server');
+tracer.startRootSpan({ name: 'main' }, rootSpan => {
+  const path = require('path');
+  const HipsterShopServer = require('./server');
 
-const PORT = process.env['PORT'];
-const PROTO_PATH = path.join(__dirname, '/proto/');
+  const PORT = process.env['PORT'];
+  const PROTO_PATH = path.join(__dirname, '/proto/');
 
-const server = new HipsterShopServer(PROTO_PATH, PORT);
+  const server = new HipsterShopServer(PROTO_PATH, PORT);
 
-server.listen();
+  server.listen();
+  rootSpan.end();
+});
