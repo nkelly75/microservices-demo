@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
       - name: jaeger
-        image: jaeger
+        image: jaegertracing/all-in-one:latest
         ports:
         - containerPort: 9411
           name: zipkin
@@ -45,6 +45,9 @@ spec:
           protocol: TCP
         - containerPort: 16686
           name: frontend
+          protocol: TCP
+        - containerPort: 14250
+          name: grpc
           protocol: TCP
         - containerPort: 14268
           name: thrift-direct
@@ -105,6 +108,10 @@ spec:
   - name: frontend
     port: 16686
     targetPort: 16686
+    protocol: TCP
+  - name: jaeger-grpc
+    port: 14250
+    targetPort: 14250
     protocol: TCP
   - name: jaeger-thrift-direct
     port: 14268

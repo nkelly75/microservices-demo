@@ -42,8 +42,6 @@ build:
     context: src/loadgenerator
   - image: adservice
     context: src/adservice
-  - image: jaeger
-    context: src/jaeger
   tagPolicy:
     gitCommit: {}
 deploy:
