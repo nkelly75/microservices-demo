@@ -27,6 +27,9 @@ else {
   });
 }
 
+const tracing = require('@opencensus/nodejs');
+const { JaegerTraceExporter } = require('@opencensus/exporter-jaeger');
+var tracer = tracing.start({ samplingRate: 1 }).tracer;
 
 if(process.env.DISABLE_TRACING) {
   console.log("Tracing disabled.")
@@ -34,9 +37,6 @@ if(process.env.DISABLE_TRACING) {
 else {
   console.log("Tracing enabled.")
   require('@google-cloud/trace-agent').start();
-  const tracing = require('@opencensus/nodejs');
-  const { JaegerTraceExporter } = require('@opencensus/exporter-jaeger');
-  var tracer = tracing.start({ samplingRate: 1 }).tracer;
 
   jaeger_host = process.env.JAEGER_SERVICE_ADDR.split(':')[0];
   jaeger_port = parseInt(process.env.JAEGER_SERVICE_ADDR.split(':')[1], 10);

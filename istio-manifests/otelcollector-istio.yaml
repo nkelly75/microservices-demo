@@ -50,7 +50,7 @@ spec:
   selector:
     component: otel-collector
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: otel-collector
@@ -59,6 +59,9 @@ metadata:
     app: opentelemetry
     component: otel-collector
 spec:
+  selector:
+    matchLabels:
+      component: otel-collector
   minReadySeconds: 5
   progressDeadlineSeconds: 120
   replicas: 1 #TODO - adjust this to your own requirements

@@ -32,7 +32,7 @@ data:
         endpoint: "jaeger-collector:14250"
       honeycomb:
         api_key: "MY_API_KEY"
-        dataset: "irving-hipstershop"
+        dataset: "demo"
         api_url: "https://api.honeycomb.io"
     service:
       extensions: [health_check]
@@ -41,38 +41,9 @@ data:
           receivers: [jaeger, zipkin]
           processors: [batch, queued_retry]
           exporters: [jaeger_grpc, honeycomb]
+
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: otel-collector
-  labels:
-    app: opencensus
-    component: otel-collector
-spec:
-  ports:
-  - name: opencensus # Default endpoint for Opencensus receiver.
-    port: 55678
-    protocol: TCP
-    targetPort: 55678
-  - name: jaeger-tchannel  # Default endpoint for Jaeger TChannel receiver.
-    port: 14267
-  - name: jaeger-thrift-http # Default endpoint for Jaeger HTTP receiver.
-    port: 14268
-  - name: jaeger-thrift-udp
-    port: 6831
-    protocol: UDP
-  - name: jaeger-thrift-compact
-    port: 6832
-    protocol: UDP
-  - name: zipkin # Default endpoint for Zipkin receiver.
-    port: 9411
-  - name: metrics # Default endpoint for querying metrics.
-    port: 8888
-  selector:
-    component: otel-collector
----
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: otel-collector
@@ -80,6 +51,9 @@ metadata:
     app: opentelemetry
     component: otel-collector
 spec:
+  selector:
+    matchLabels:
+      component: otel-collector
   minReadySeconds: 5
   progressDeadlineSeconds: 120
   replicas: 1 #TODO - adjust this to your own requirements
@@ -143,10 +117,34 @@ spec:
               - key: otel-collector-config
                 path: otel-collector-config.yaml
           name: otel-collector-config-vol
-#        - secret:
-#            name: otel-collector-secrets
-#            items:
-#              - key: cert.pem
-#                path: cert.pem
-#              - key: key.pem
-#                path: key.pem
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  labels:
+    app: opencensus
+    component: otel-collector
+spec:
+  ports:
+  - name: opencensus # Default endpoint for Opencensus receiver.
+    port: 55678
+    protocol: TCP
+    targetPort: 55678
+  - name: jaeger-tchannel  # Default endpoint for Jaeger TChannel receiver.
+    port: 14267
+  - name: jaeger-thrift-http # Default endpoint for Jaeger HTTP receiver.
+    port: 14268
+  - name: jaeger-thrift-udp
+    port: 6831
+    protocol: UDP
+  - name: jaeger-thrift-compact
+    port: 6832
+    protocol: UDP
+  - name: zipkin # Default endpoint for Zipkin receiver.
+    port: 9411
+  - name: metrics # Default endpoint for querying metrics.
+    port: 8888
+  selector:
+    component: otel-collector
