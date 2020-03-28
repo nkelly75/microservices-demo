@@ -76,7 +76,7 @@ spec:
         env:
         - name: GOGC
           value: "80"
-        image: irvingpop/otelcontribcol:20200306
+        image: otel/opentelemetry-collector-contrib-dev:latest
         name: server
         resources:
           limits:
