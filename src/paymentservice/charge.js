@@ -49,6 +49,14 @@ class ExpiredCreditCard extends CreditCardError {
   }
 }
 
+class CurrencyError extends Error {
+  constructor (currency) {
+    super(`We cannot accept payment in currency ${currency}`);
+    this.code = 400; // Invalid argument error
+    this.currency = currency;
+  }
+}
+
 /**
  * Verifies the credit card number and (pretend) charges the card.
  *
@@ -76,8 +84,18 @@ module.exports = function charge (request) {
   const { credit_card_expiration_year: year, credit_card_expiration_month: month } = creditCard;
   if ((currentYear * 12 + currentMonth) > (year * 12 + month)) { throw new ExpiredCreditCard(cardNumber.replace('-', ''), month, year); }
 
+  if (amount.currency_code === 'TRY') {
+    throw new CurrencyError(amount.currency_code);
+  }
+
+  let delay = 0;
+  if (amount.currency_code === 'CAD') {
+    delay = 2000 + Math.floor(Math.random() * 1000);
+    // logger.info(`Setting delay to: ${delay}`);
+  }
+
   logger.info(`Transaction processed: ${cardType} ending ${cardNumber.substr(-4)} \
     Amount: ${amount.currency_code}${amount.units}.${amount.nanos}`);
 
-  return { transaction_id: uuid() };
+  return { transaction_id: uuid(), delay: delay, currency: amount.currency_code };
 };

@@ -27,7 +27,8 @@ const logger = pino({
 });
 
 class HipsterShopServer {
-  constructor (protoRoot, port = HipsterShopServer.PORT) {
+  constructor (tracer, protoRoot, port = HipsterShopServer.PORT) {
+    this.tracer = tracer;
     this.port = port;
 
     this.packages = {
@@ -45,12 +46,32 @@ class HipsterShopServer {
    * @param {*} callback  fn(err, ChargeResponse)
    */
   static ChargeServiceHandler (call, callback) {
+    const span = this.tracer.startChildSpan("extraChargeSpan");
+    span.start();
     try {
       logger.info(`PaymentService#Charge invoked with request ${JSON.stringify(call.request)}`);
-      const response = charge(call.request);
-      callback(null, response);
+
+      const { transaction_id, delay, currency } = charge(call.request);
+      const response = {
+        transaction_id: transaction_id
+      };
+      if (delay) {
+        setTimeout(function() {
+          span.addAnnotation('delayed payment', { delay: delay, currency: currency });
+          span.end();
+          callback(null, response);
+        }, delay);
+      } else {
+        span.addAnnotation('regular payment', { currency: currency });
+        span.end();
+        callback(null, response);
+      }
     } catch (err) {
+      if (err.currency) {
+        span.addAnnotation('currency error', { currency: err.currency });
+      }
       console.warn(err);
+      span.end();
       callback(err);
     }
   }
