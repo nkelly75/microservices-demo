@@ -40,7 +40,7 @@ data:
         traces:
           receivers: [jaeger, zipkin]
           processors: [batch, queued_retry]
-          exporters: [jaeger_grpc, honeycomb]
+          exporters: [jaeger_grpc]
 
 ---
 apiVersion: apps/v1
@@ -76,7 +76,7 @@ spec:
         env:
         - name: GOGC
           value: "80"
-        image: otel/opentelemetry-collector-contrib-dev:latest
+        image: otel/opentelemetry-collector-contrib-dev:6164262401696db4669d05972885190c02cac47a
         name: server
         resources:
           limits:
