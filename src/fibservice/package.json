@@ -1,0 +1,23 @@
+{
+  "name": "fib",
+  "version": "1.0.0",
+  "description": "test otel with node",
+  "main": "index.js",
+  "scripts": {
+    "start": "node -r ./tracing.js ./index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@opentelemetry/api": "^0.6.1",
+    "@opentelemetry/core": "^0.6.1",
+    "@opentelemetry/exporter-jaeger": "^0.6.1",
+    "@opentelemetry/node": "^0.6.1",
+    "@opentelemetry/plugin-express": "^0.6.1",
+    "@opentelemetry/plugin-http": "^0.6.1",
+    "@opentelemetry/tracing": "^0.6.1",
+    "express": "^4.17.1",
+    "lightstep-opentelemetry-exporter": "^0.1.0"
+  }
+}

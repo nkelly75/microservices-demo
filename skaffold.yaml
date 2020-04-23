@@ -32,6 +32,8 @@ build:
     context: src/checkoutservice
   - image: paymentservice
     context: src/paymentservice
+  - image: fibservice
+    context: src/fibservice
   - image: currencyservice
     context: src/currencyservice
   - image: cartservice

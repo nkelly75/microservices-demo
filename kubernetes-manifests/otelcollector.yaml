@@ -34,13 +34,15 @@ data:
         api_key: "MY_API_KEY"
         dataset: "demo"
         api_url: "https://api.honeycomb.io"
+      lightstep:
+        access_token: "hidden"
     service:
       extensions: [health_check]
       pipelines:
         traces:
           receivers: [jaeger, zipkin]
           processors: [batch, queued_retry]
-          exporters: [jaeger_grpc]
+          exporters: [jaeger_grpc, lightstep]
 
 ---
 apiVersion: apps/v1
