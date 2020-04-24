@@ -16,6 +16,7 @@ const path = require('path');
 const grpc = require('grpc');
 const pino = require('pino');
 const protoLoader = require('@grpc/proto-loader');
+const GrpcPlugin = require('@opencensus/instrumentation-grpc').GrpcPlugin;
 
 const charge = require('./charge');
 
@@ -46,32 +47,35 @@ class HipsterShopServer {
    * @param {*} callback  fn(err, ChargeResponse)
    */
   static ChargeServiceHandler (call, callback) {
-    const span = this.tracer.startChildSpan("extraChargeSpan");
-    span.start();
+    const tracer = this.tracer;
+
     try {
       logger.info(`PaymentService#Charge invoked with request ${JSON.stringify(call.request)}`);
+
+      // This shows that a use traceId and spanId is available in the incoming call
+      // metadata. For some reason it's not getting set as context on this side
+      const spanContext = GrpcPlugin.getSpanContext(call.metadata);
+      logger.info(`* spanContext ${JSON.stringify(spanContext)}`);
 
       const { transaction_id, delay, currency } = charge(call.request);
       const response = {
         transaction_id: transaction_id
       };
+      if (currency) {
+        tracer.getCurrentSpan().setAttribute("currency", currency)
+      }
       if (delay) {
         setTimeout(function() {
-          span.addAnnotation('delayed payment', { delay: delay, currency: currency });
-          span.end();
           callback(null, response);
         }, delay);
       } else {
-        span.addAnnotation('regular payment', { currency: currency });
-        span.end();
         callback(null, response);
       }
     } catch (err) {
       if (err.currency) {
-        span.addAnnotation('currency error', { currency: err.currency });
+        tracer.getCurrentSpan().setAttribute("currency", err.currency)
       }
       console.warn(err);
-      span.end();
       callback(err);
     }
   }

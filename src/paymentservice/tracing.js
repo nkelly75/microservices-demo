@@ -1,0 +1,59 @@
+const { LogLevel, ConsoleLogger /*, B3Propagator, CompositePropagator */ } = require("@opentelemetry/core");
+const opentelemetry = require("@opentelemetry/api");
+const { NodeTracerProvider } = require("@opentelemetry/node");
+const {
+  SimpleSpanProcessor,
+  BatchSpanProcessor,
+  ConsoleSpanExporter
+} = require("@opentelemetry/tracing");
+const { JaegerExporter } = require("@opentelemetry/exporter-jaeger");
+const { LightstepExporter } = require("lightstep-opentelemetry-exporter");
+
+module.exports = serviceName => {
+  const jaegerOptions = {
+    serviceName: serviceName,
+    host: process.env.JAEGER_HOST,
+    port: 6832
+  };
+
+  const lightstepOptions = {
+    serviceName: serviceName,
+    token: process.env.LIGHTSTEP_KEY
+  };
+
+  // const provider = new NodeTracerProvider({ logLevel: LogLevel.ERROR });
+
+  const provider = new NodeTracerProvider({
+    logLevel: LogLevel.ERROR,
+    plugins: {
+      grpc: {
+        enabled: true,
+        path: '@opentelemetry/plugin-grpc',
+      },
+    },
+  });
+
+  provider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
+
+  if (process.env.JAEGER_HOST) {
+    console.log(`${process.env.JAEGER_HOST} ${serviceName}`);
+    provider.addSpanProcessor(
+      new BatchSpanProcessor(new JaegerExporter(jaegerOptions))
+    );
+  }
+
+  if (process.env.LIGHTSTEP_KEY) {
+    console.log(`Adding lighstep exporter for service: ${serviceName}`);
+    provider.addSpanProcessor(
+      new BatchSpanProcessor(new LightstepExporter(lightstepOptions))
+    );
+  }
+
+  provider.register(
+  //   {
+  //   propagator: new B3Propagator(),
+  //   propagator: new CompositePropagator(),
+  // }
+  );
+  return opentelemetry.trace.getTracer(serviceName);
+};

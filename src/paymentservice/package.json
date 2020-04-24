@@ -5,6 +5,7 @@
   "repository": "https://github.com/GoogleCloudPlatform/microservices-demo",
   "main": "index.js",
   "scripts": {
+    "start": "node -r ./tracing.js ./index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "semistandard *.js"
   },
@@ -13,11 +14,16 @@
   "dependencies": {
     "@google-cloud/debug-agent": "^4.0.1",
     "@google-cloud/profiler": "^2.0.2",
-    "@google-cloud/trace-agent": "4.0.1",
     "@grpc/proto-loader": "^0.1.0",
-    "@opencensus/exporter-jaeger": "0.0.20",
     "@opencensus/nodejs": "0.0.20",
+    "@opentelemetry/api": "^0.6.1",
+    "@opentelemetry/core": "^0.6.1",
+    "@opentelemetry/exporter-jaeger": "^0.6.1",
+    "@opentelemetry/node": "^0.6.1",
+    "@opentelemetry/plugin-grpc": "^0.6.1",
+    "@opentelemetry/tracing": "^0.6.1",
     "grpc": "^1.22.2",
+    "lightstep-opentelemetry-exporter": "^0.1.0",
     "pino": "^5.6.2",
     "simple-card-validator": "^1.1.0",
     "uuid": "^3.2.1"

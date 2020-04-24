@@ -23,24 +23,13 @@ require('@google-cloud/profiler').start({
   }
 });
 
-const tracing = require('@opencensus/nodejs');
-const { JaegerTraceExporter } = require('@opencensus/exporter-jaeger');
-var tracer = tracing.start({ samplingRate: 1 }).tracer;
+const tracer = require('./tracing')('paymentservice')
 
 if(process.env.DISABLE_TRACING) {
   console.log("Tracing disabled.")
 }
 else {
   console.log("Tracing enabled.")
-  require('@google-cloud/trace-agent').start();
-
-  const jaeger_host = process.env.JAEGER_SERVICE_ADDR.split(':')[0];
-  const jaeger_port = parseInt(process.env.JAEGER_SERVICE_ADDR.split(':')[1], 10);
-
-  tracer.registerSpanEventListener(new JaegerTraceExporter({
-    host: jaeger_host,
-    serviceName: 'paymentservice'
-  }));
 }
 
 require('@google-cloud/debug-agent').start({
@@ -50,7 +39,7 @@ require('@google-cloud/debug-agent').start({
   }
 });
 
-tracer.startRootSpan({ name: 'main' }, rootSpan => {
+// tracer.startRootSpan({ name: 'main' }, rootSpan => {
   const path = require('path');
   const HipsterShopServer = require('./server');
 
@@ -60,5 +49,5 @@ tracer.startRootSpan({ name: 'main' }, rootSpan => {
   const server = new HipsterShopServer(tracer, PROTO_PATH, PORT);
 
   server.listen();
-  rootSpan.end();
-});
+//   rootSpan.end();
+// });
