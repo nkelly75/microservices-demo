@@ -34,8 +34,10 @@ spec:
         env:
         - name: PORT
           value: "50051"
-        # - name: JAEGER_SERVICE_ADDR
-        #   value: "otel-collector:14268"
+        - name: JAEGER_HOST
+          value: "otel-collector"
+        - name: JAEGER_PORT
+          value: "6832"
         - name: LIGHTSTEP_KEY
           valueFrom:
             secretKeyRef:

@@ -8,12 +8,13 @@ const {
 } = require("@opentelemetry/tracing");
 const { JaegerExporter } = require("@opentelemetry/exporter-jaeger");
 const { LightstepExporter } = require("lightstep-opentelemetry-exporter");
+const { CensusPropagator } = require("./CensusPropagator");
 
 module.exports = serviceName => {
   const jaegerOptions = {
     serviceName: serviceName,
     host: process.env.JAEGER_HOST,
-    port: 6832
+    port: process.env.JAEGER_PORT
   };
 
   const lightstepOptions = {
@@ -24,7 +25,8 @@ module.exports = serviceName => {
   // const provider = new NodeTracerProvider({ logLevel: LogLevel.ERROR });
 
   const provider = new NodeTracerProvider({
-    logLevel: LogLevel.ERROR,
+    logLevel: LogLevel.DEBUG,
+    // propagators: new CensusPropagator(),
     plugins: {
       grpc: {
         enabled: true,
@@ -32,6 +34,8 @@ module.exports = serviceName => {
       },
     },
   });
+
+  console.log(`** Created provider`);
 
   provider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
 
@@ -50,10 +54,20 @@ module.exports = serviceName => {
   }
 
   provider.register(
-  //   {
-  //   propagator: new B3Propagator(),
-  //   propagator: new CompositePropagator(),
-  // }
+    {
+      propagator: new CensusPropagator()
+      // propagator: new B3Propagator(),
+      // propagator: new CompositePropagator(),
+    }
   );
+  console.log(`** Registered provider`);
+  if (opentelemetry.propagation) {
+    console.log(`** Found propagation in API`);
+    if (opentelemetry.propagation._propagator) {
+      console.log(`** Found _propagator in API ${JSON.stringify(opentelemetry.propagation._propagator)}`);
+    }
+  }
+  
+
   return opentelemetry.trace.getTracer(serviceName);
 };

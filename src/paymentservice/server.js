@@ -16,7 +16,9 @@ const path = require('path');
 const grpc = require('grpc');
 const pino = require('pino');
 const protoLoader = require('@grpc/proto-loader');
-const GrpcPlugin = require('@opencensus/instrumentation-grpc').GrpcPlugin;
+// const GrpcPlugin = require('@opencensus/instrumentation-grpc').GrpcPlugin;
+// const GrpcPlugin = require('@opentelemetry/plugin-grpc').GrpcPlugin;
+// const api_1 = require("@opentelemetry/api");
 
 const charge = require('./charge');
 
@@ -52,10 +54,15 @@ class HipsterShopServer {
     try {
       logger.info(`PaymentService#Charge invoked with request ${JSON.stringify(call.request)}`);
 
-      // This shows that a use traceId and spanId is available in the incoming call
+      const currentSpan = tracer.getCurrentSpan();
+      const spanContext = currentSpan.context();
+      const isRecording = currentSpan.isRecording();
+      logger.info(`** ChargeServiceHandler has currentSpan with context: ${JSON.stringify(spanContext)} isRecording: ${isRecording}`);
+
+      // This shows that a useful traceId and spanId is available in the incoming call
       // metadata. For some reason it's not getting set as context on this side
-      const spanContext = GrpcPlugin.getSpanContext(call.metadata);
-      logger.info(`* spanContext ${JSON.stringify(spanContext)}`);
+      // const spanContext = GrpcPlugin.getSpanContext(call.metadata);
+      // logger.info(`* spanContext ${JSON.stringify(spanContext)}`);
 
       const { transaction_id, delay, currency } = charge(call.request);
       const response = {
