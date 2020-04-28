@@ -16,13 +16,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const api_1 = require("@opentelemetry/api");
-// const context_1 = require("../context");
-// const context_base_1 = require("@opentelemetry/context-base");
-
-// import { getParentSpanContext, setExtractedSpanContext } from '../context';
 const { getParentSpanContext, setExtractedSpanContext } = require("@opentelemetry/core");
-
-
 
 /** The metadata key under which span context is stored as a binary value. */
 exports.GRPC_TRACE_KEY = 'grpc-trace-bin';
@@ -117,13 +111,9 @@ function deserializeSpanContext(buffer) {
 }
 exports.deserializeSpanContext = deserializeSpanContext;
 
-// function setExtractedSpanContext(context, spanContext) {
-//     return context.setValue(EXTRACTED_SPAN_CONTEXT_KEY, spanContext);
-// }
-
 /**
- * Propagator for the B3 HTTP header format.
- * Based on: https://github.com/openzipkin/b3-propagation
+ * Propagator for the grpc-trace-bin header in gRPC
+ * Inspired by: https://github.com/census-instrumentation/opencensus-node/tree/master/packages/opencensus-propagation-binaryformat/src
  */
 class CensusPropagator {
     inject(context, carrier, setter) {
@@ -144,47 +134,37 @@ class CensusPropagator {
         }
     }
     extract(context, carrier, getter) {
-        // const grpcTraceBin = getter(carrier, GRPC_TRACE_KEY);
-        // const censusSpanContext = deserializeSpanContext(grpcTraceBin);
-        // console.log(`** In CensusPropagator.extract with context: ${context} carrier: ${carrier} getter: ${getter}`);
         if (carrier) {
             const carrierAsMetadata = carrier;
             const metadataValue = carrierAsMetadata.getMap()[exports.GRPC_TRACE_KEY];
             if (!metadataValue) {
-                console.log('** no value for metadataValue');
+                // No metadata, return empty context
                 return context;
             } else {
-                console.log('** In CensusPropagator.extract got buffer');
                 const censusSpanContext = deserializeSpanContext(metadataValue);
-                console.log('** In CensusPropagator.extract called deserialize');
                 if (censusSpanContext) {
-                    console.log(`** got censusSpanContext`);
-
                     const traceId = censusSpanContext.traceId;
                     const spanId = censusSpanContext.spanId;
                     const options = censusSpanContext.options;
 
                     if (typeof traceId !== 'string' || typeof spanId !== 'string') {
-                        console.log(`** unexpected Ids`);
+                        // Unexpected Ids, return empty context
                         return context;                        
                     }
                     if (isValidTraceId(traceId) && isValidSpanId(spanId)) {
                         console.log(`** valid Ids ${traceId} ${spanId} ${options}`);
                         const traceFlags = isNaN(Number(options)) ? api_1.TraceFlags.NONE : Number(options);
                         console.log(`** traceFlags: ${traceFlags}`);
-                        // from ./node_modules/@opentelemetry/core/build/src/context/context.js
                         return setExtractedSpanContext(context, {
                             traceId,
                             spanId,
                             isRemote: true,
-                            traceFlags: isNaN(Number(options)) ? api_1.TraceFlags.NONE : Number(options),
+                            traceFlags
                         });
-                    } else {
-                        console.log(`** invalid Ids`);
                     }
                     return context;
                 } else {
-                    console.log(`** no value for censusSpanContext`);
+                    // Failed to deserialize Span Context, return empty context
                     return context;
                 }   
             }

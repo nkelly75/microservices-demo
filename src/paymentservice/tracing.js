@@ -1,4 +1,4 @@
-const { LogLevel, ConsoleLogger /*, B3Propagator, CompositePropagator */ } = require("@opentelemetry/core");
+const { LogLevel, ConsoleLogger } = require("@opentelemetry/core");
 const opentelemetry = require("@opentelemetry/api");
 const { NodeTracerProvider } = require("@opentelemetry/node");
 const {
@@ -22,10 +22,8 @@ module.exports = serviceName => {
     token: process.env.LIGHTSTEP_KEY
   };
 
-  // const provider = new NodeTracerProvider({ logLevel: LogLevel.ERROR });
-
   const provider = new NodeTracerProvider({
-    logLevel: LogLevel.DEBUG,
+    logLevel: LogLevel.ERROR,
     // propagators: new CensusPropagator(),
     plugins: {
       grpc: {
@@ -35,12 +33,10 @@ module.exports = serviceName => {
     },
   });
 
-  console.log(`** Created provider`);
-
   provider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
 
   if (process.env.JAEGER_HOST) {
-    console.log(`${process.env.JAEGER_HOST} ${serviceName}`);
+    console.log(`Adding jaeger exporter to host: ${process.env.JAEGER_HOST} for service: ${serviceName}`);
     provider.addSpanProcessor(
       new BatchSpanProcessor(new JaegerExporter(jaegerOptions))
     );
@@ -53,21 +49,13 @@ module.exports = serviceName => {
     );
   }
 
+  // Register CensusPropagator so we can use the 'grpc-trace-bin' header
+  // in gRPC calls.
   provider.register(
     {
       propagator: new CensusPropagator()
-      // propagator: new B3Propagator(),
-      // propagator: new CompositePropagator(),
     }
   );
-  console.log(`** Registered provider`);
-  if (opentelemetry.propagation) {
-    console.log(`** Found propagation in API`);
-    if (opentelemetry.propagation._propagator) {
-      console.log(`** Found _propagator in API ${JSON.stringify(opentelemetry.propagation._propagator)}`);
-    }
-  }
   
-
   return opentelemetry.trace.getTracer(serviceName);
 };

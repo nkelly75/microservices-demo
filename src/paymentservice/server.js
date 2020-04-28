@@ -16,9 +16,6 @@ const path = require('path');
 const grpc = require('grpc');
 const pino = require('pino');
 const protoLoader = require('@grpc/proto-loader');
-// const GrpcPlugin = require('@opencensus/instrumentation-grpc').GrpcPlugin;
-// const GrpcPlugin = require('@opentelemetry/plugin-grpc').GrpcPlugin;
-// const api_1 = require("@opentelemetry/api");
 
 const charge = require('./charge');
 
@@ -50,26 +47,19 @@ class HipsterShopServer {
    */
   static ChargeServiceHandler (call, callback) {
     const tracer = this.tracer;
+    const currentSpan = tracer.getCurrentSpan();
 
     try {
       logger.info(`PaymentService#Charge invoked with request ${JSON.stringify(call.request)}`);
 
-      const currentSpan = tracer.getCurrentSpan();
-      const spanContext = currentSpan.context();
-      const isRecording = currentSpan.isRecording();
-      logger.info(`** ChargeServiceHandler has currentSpan with context: ${JSON.stringify(spanContext)} isRecording: ${isRecording}`);
-
-      // This shows that a useful traceId and spanId is available in the incoming call
-      // metadata. For some reason it's not getting set as context on this side
-      // const spanContext = GrpcPlugin.getSpanContext(call.metadata);
-      // logger.info(`* spanContext ${JSON.stringify(spanContext)}`);
+      logger.info(`** ChargeServiceHandler has currentSpan with context: ${JSON.stringify(currentSpan.context())} and isRecording: ${currentSpan.isRecording()}`);
 
       const { transaction_id, delay, currency } = charge(call.request);
       const response = {
         transaction_id: transaction_id
       };
       if (currency) {
-        tracer.getCurrentSpan().setAttribute("currency", currency)
+        currentSpan.setAttribute("currency", currency)
       }
       if (delay) {
         setTimeout(function() {
@@ -80,7 +70,7 @@ class HipsterShopServer {
       }
     } catch (err) {
       if (err.currency) {
-        tracer.getCurrentSpan().setAttribute("currency", err.currency)
+        currentSpan.setAttribute("currency", err.currency)
       }
       console.warn(err);
       callback(err);
