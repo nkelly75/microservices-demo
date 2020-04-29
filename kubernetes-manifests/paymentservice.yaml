@@ -31,6 +31,10 @@ spec:
         image: paymentservice
         ports:
         - containerPort: 50051
+          name: grpc
+        - containerPort: 9464
+          name: prom
+          protocol: TCP
         env:
         - name: PORT
           value: "50051"
@@ -69,3 +73,6 @@ spec:
   - name: grpc
     port: 50051
     targetPort: 50051
+  - name: prom
+    port: 9464
+    targetPort: 9464

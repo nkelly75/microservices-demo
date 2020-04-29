@@ -27,6 +27,6 @@ COPY --from=builder /usr/src/app/node_modules ./node_modules
 
 COPY . .
 
-EXPOSE 50051
+EXPOSE 50051 9464
 
 ENTRYPOINT [ "node", "-r", "./tracing.js", "./index.js" ]

@@ -16,6 +16,24 @@
 
 'use strict';
 
+const { PrometheusExporter } = require('@opentelemetry/exporter-prometheus');
+const { MeterProvider }  = require('@opentelemetry/metrics');
+
+// const client = require('prom-client');
+// const collectDefaultMetrics = client.collectDefaultMetrics;
+const { collectDefaultMetrics } = require('prom-client');
+
+// Add your port and startServer to the Prometheus options
+const options = {port: 9464, startServer: true};
+const exporter = new PrometheusExporter(options);
+
+// The OTel PrometheusExporter doesn't seem to expose the ability to
+// use collectDefaultMetrics. This workaround is poking into using its private
+// _registry property.
+if (exporter._registry) {
+  collectDefaultMetrics({ register: exporter._registry });
+}
+
 require('@google-cloud/profiler').start({
   serviceContext: {
     service: 'paymentservice',
@@ -38,6 +56,16 @@ require('@google-cloud/debug-agent').start({
     version: 'VERSION'
   }
 });
+
+// Register the exporter
+const meter = new MeterProvider({
+  exporter,
+  interval: 1000,
+}).getMeter('example-prometheus');
+
+// Now, start recording data
+const counter = meter.createCounter('metric_name');
+counter.add(10, {});
 
 // tracer.startRootSpan({ name: 'main' }, rootSpan => {
   const path = require('path');

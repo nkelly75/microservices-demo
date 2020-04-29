@@ -18,6 +18,8 @@
     "@opentelemetry/api": "^0.6.1",
     "@opentelemetry/core": "^0.6.1",
     "@opentelemetry/exporter-jaeger": "^0.6.1",
+    "@opentelemetry/exporter-prometheus": "^0.6.1",
+    "@opentelemetry/metrics": "^0.6.1",
     "@opentelemetry/node": "^0.6.1",
     "@opentelemetry/plugin-grpc": "^0.6.1",
     "@opentelemetry/tracing": "^0.6.1",
