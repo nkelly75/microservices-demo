@@ -4,6 +4,28 @@ const url = require('url');
 const http = require('http');
 
 const app = express();
+const promClient = require("prom-client");
+const promBundle = require("express-prom-bundle");
+
+app.set('etag', false);
+
+const bundle = promBundle({
+  buckets: [0.005, 0.01, 0.025, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 25],
+  includeMethod: true,
+  includePath: true,
+  promClient: {
+      collectDefaultMetrics: {
+      }
+  },
+  urlValueParser: {
+      minHexLength: 5,
+      extraMasks: [
+          "^[0-9]+\\.[0-9]+\\.[0-9]+$" // replace dot-separated dates with #val
+      ]
+  }
+});
+
+app.use(bundle);
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html');
