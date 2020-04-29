@@ -3,14 +3,14 @@
   "version": "0.0.1",
   "description": "Payment Microservice demo",
   "repository": "https://github.com/GoogleCloudPlatform/microservices-demo",
+  "license": "ISC",
+  "author": "Jonathan Lui",
   "main": "index.js",
   "scripts": {
+    "lint": "semistandard *.js",
     "start": "node -r ./tracing.js ./index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "semistandard *.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Jonathan Lui",
-  "license": "ISC",
   "dependencies": {
     "@google-cloud/debug-agent": "^4.0.1",
     "@google-cloud/profiler": "^2.0.2",
@@ -23,7 +23,7 @@
     "@opentelemetry/tracing": "^0.6.1",
     "grpc": "^1.24.2",
     "lightstep-opentelemetry-exporter": "^0.1.0",
-    "otel-grpc-propagator": "^0.7.1",
+    "otel-grpc-propagator-tmp": "^0.0.1",
     "pino": "^5.6.2",
     "simple-card-validator": "^1.1.0",
     "uuid": "^3.2.1"

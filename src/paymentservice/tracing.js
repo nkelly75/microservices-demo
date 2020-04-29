@@ -8,7 +8,7 @@ const {
 } = require("@opentelemetry/tracing");
 const { JaegerExporter } = require("@opentelemetry/exporter-jaeger");
 const { LightstepExporter } = require("lightstep-opentelemetry-exporter");
-const { CensusPropagator } = require("otel-grpc-propagator");
+const { CensusPropagator } = require("otel-grpc-propagator-tmp");
 
 module.exports = serviceName => {
   const jaegerOptions = {
