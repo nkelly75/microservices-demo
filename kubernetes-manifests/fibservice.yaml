@@ -61,11 +61,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: fibservice
+  labels:
+    tier: frontend
 spec:
   type: ClusterIP
   selector:
     app: fibservice
   ports:
-  - name: grpc
+  - name: web
     port: 3090
     targetPort: 3090
