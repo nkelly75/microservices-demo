@@ -22,7 +22,9 @@ spec:
   ruleSelector:
     matchLabels:
       prometheus: service-prometheus
-      role: alert-rules
+      # role: alert-rules
+    matchExpressions:
+      - {key: role, operator: In, values: [alert-rules, recording-rules]}
   serviceAccountName: prometheus-k8s
   serviceMonitorSelector:
     matchExpressions:

@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: service-prometheus
+    role: recording-rules
+  name: prometheus-service-rec-rules
+  namespace: monitoring
+spec:
+  groups:
+  - name: fibservice.rec.rules
+    rules:
+    - record: pod_instance_path_status:http_requests_fibservice:rate1m
+      expr: rate(http_request_duration_seconds_count{service="fibservice"}[1m])
+    - record: pod_path:http_requests_fibservice:rate1m
+      expr: sum without (instance, status) (pod_instance_path_status:http_requests_fibservice:rate1m)
+    - record: pod:http_requests_fibservice:rate1m
+      expr: sum without (path) (pod_path:http_requests_fibservice:rate1m)
+    - record: path:http_requests_fibservice:rate1m
+      expr: sum without (pod) (pod_path:http_requests_fibservice:rate1m)
+    - record: http_requests_fibservice:rate1m
+      expr: sum without (pod) (pod:http_requests_fibservice:rate1m)

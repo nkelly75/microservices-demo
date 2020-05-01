@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: k8s_service_prom
+    honor_labels: true
+    metrics_path: /federate
+    params:
+      match[]:
+        - '{__name__=~".*http_requests_fibservice.*"}'
+    static_configs:
+      - targets:
+        - 127.0.0.1
+    tls_config:
+      insecure_skip_verify: true
