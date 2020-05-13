@@ -91,7 +91,6 @@ module.exports = function charge (request) {
   let delay = 0;
   if (amount.currency_code === 'CAD') {
     delay = 2000 + Math.floor(Math.random() * 1000);
-    // logger.info(`Setting delay to: ${delay}`);
   }
 
   logger.info(`Transaction processed: ${cardType} ending ${cardNumber.substr(-4)} \

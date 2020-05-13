@@ -52,8 +52,6 @@ class HipsterShopServer {
     try {
       logger.info(`PaymentService#Charge invoked with request ${JSON.stringify(call.request)}`);
 
-      logger.info(`** ChargeServiceHandler has currentSpan with context: ${JSON.stringify(currentSpan.context())} and isRecording: ${currentSpan.isRecording()}`);
-
       const { transaction_id, delay, currency } = charge(call.request);
       const response = {
         transaction_id: transaction_id

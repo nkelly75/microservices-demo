@@ -22,7 +22,8 @@ module.exports = serviceName => {
     token: process.env.LIGHTSTEP_KEY
   };
 
-  const provider = new NodeTracerProvider({
+  // Prep config for NodeTracerProvider
+  const tracerConfig = {
     logLevel: LogLevel.ERROR,
     // propagators: new CensusPropagator(),
     plugins: {
@@ -31,7 +32,14 @@ module.exports = serviceName => {
         path: '@opentelemetry/plugin-grpc',
       },
     },
-  });
+  };
+  if (process.env.SERVICE_VERSION) {
+    tracerConfig.defaultAttributes = {
+      'service.version': process.env.SERVICE_VERSION
+    }
+  }
+
+  const provider = new NodeTracerProvider(tracerConfig);
 
   provider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
 

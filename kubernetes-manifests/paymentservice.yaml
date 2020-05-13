@@ -36,6 +36,8 @@ spec:
           name: prom
           protocol: TCP
         env:
+        - name: SERVICE_VERSION
+          value: "0.0.5"
         - name: PORT
           value: "50051"
         - name: JAEGER_HOST
