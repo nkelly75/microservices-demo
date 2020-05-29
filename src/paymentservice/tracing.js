@@ -8,7 +8,36 @@ const {
 } = require("@opentelemetry/tracing");
 const { JaegerExporter } = require("@opentelemetry/exporter-jaeger");
 const { LightstepExporter } = require("lightstep-opentelemetry-exporter");
-const { CensusPropagator } = require("otel-grpc-propagator");
+const { GrpcCensusPropagator } = require("propagator-grpc-tmp");
+
+class HealthcheckSampler {
+  shouldSample(parentContext) {
+
+    // console.log(`** HealthSampler parentContext=${JSON.stringify(parentContext)}`);
+    let decision = true;
+
+    // Respect the parent sampling decision if there is one
+    if (parentContext && typeof parentContext.traceFlags !== 'undefined') {
+      console.log(`** HealthSampler respecting parent sampling decision`);
+      decision = (
+        (1 & parentContext.traceFlags) === 1
+      );
+      // TODO remove
+      // decision = Math.random() < 0.5;
+    } else if (typeof parentContext === 'undefined') {
+      // Hack to detect HealthCheck vs real call from instrumented client
+      decision = false;
+    } else {
+      decision = true;
+      // TODO remove
+      // decision = Math.random() < 0.5;
+    }
+
+    console.log(`** HealthSampler decision=${decision}`);
+
+    return decision;
+  }
+}
 
 module.exports = serviceName => {
   const jaegerOptions = {
@@ -32,6 +61,7 @@ module.exports = serviceName => {
         path: '@opentelemetry/plugin-grpc',
       },
     },
+    sampler: new HealthcheckSampler()
   };
   if (process.env.SERVICE_VERSION) {
     tracerConfig.defaultAttributes = {
@@ -57,11 +87,11 @@ module.exports = serviceName => {
     );
   }
 
-  // Register CensusPropagator so we can use the 'grpc-trace-bin' header
+  // Register GrpcCensusPropagator so we can use the 'grpc-trace-bin' header
   // in gRPC calls.
   provider.register(
     {
-      propagator: new CensusPropagator()
+      propagator: new GrpcCensusPropagator()
     }
   );
   

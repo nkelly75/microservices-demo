@@ -36,6 +36,17 @@ class HipsterShopServer {
       health: this.loadProto(path.join(protoRoot, 'grpc/health/v1/health.proto'))
     };
 
+    if (this.packages && this.packages.hipsterShop && this.packages.hipsterShop.hipstershop) {
+      let hipstershop = this.packages.hipsterShop.hipstershop;
+      // initialize client for calling ProductCatalogService
+      this.productCatalogClient = new hipstershop.ProductCatalogService('productcatalogservice:3550',
+        grpc.credentials.createInsecure());
+
+      if (!this.productCatalogClient){
+        logger.warn('Failed to initialize productCatalogClient');
+      }
+    }
+
     this.server = new grpc.Server();
     this.loadAllProtos(protoRoot);
   }
@@ -47,6 +58,7 @@ class HipsterShopServer {
    */
   static ChargeServiceHandler (call, callback) {
     const tracer = this.tracer;
+    const productCatalogClient = this.productCatalogClient;
     const currentSpan = tracer.getCurrentSpan();
 
     try {
@@ -64,7 +76,22 @@ class HipsterShopServer {
           callback(null, response);
         }, delay);
       } else {
-        callback(null, response);
+
+        // Throw in a gRPC call to ProductCatalogService
+        if (productCatalogClient && productCatalogClient.listProducts) {
+          productCatalogClient.listProducts({}, function (error, listProductsResponse) {
+            if (error) {
+              logger.warn('error calling listProducts');
+            } else {
+              if (listProductsResponse.products && listProductsResponse.products.length) {
+                logger.info(`got ${listProductsResponse.products.length} products`);
+              }
+            }
+            callback(null, response);
+          });
+        } else {
+          callback(null, response);
+        }
       }
     } catch (err) {
       if (err.currency) {

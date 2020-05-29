@@ -44,11 +44,11 @@ spec:
           value: "otel-collector"
         - name: JAEGER_PORT
           value: "6832"
-        - name: LIGHTSTEP_KEY
-          valueFrom:
-            secretKeyRef:
-              name: ls-token
-              key: ls-token.txt
+        # - name: LIGHTSTEP_KEY
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: ls-token
+        #       key: ls-token.txt
         readinessProbe:
           exec:
             command: ["/bin/grpc_health_probe", "-addr=:50051"]
