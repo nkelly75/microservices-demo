@@ -8,7 +8,7 @@ const {
 } = require("@opentelemetry/tracing");
 const { JaegerExporter } = require("@opentelemetry/exporter-jaeger");
 const { LightstepExporter } = require("lightstep-opentelemetry-exporter");
-const { GrpcCensusPropagator } = require("propagator-grpc-tmp");
+const { GrpcCensusPropagator } = require("@opentelemetry/propagator-grpc-census-binary");
 
 class HealthcheckSampler {
   shouldSample(parentContext) {
